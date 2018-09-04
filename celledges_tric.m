@@ -5,6 +5,7 @@ tic
 Pos=getPosition(h);
 im_jct=im_jct(Pos(2):Pos(2)+Pos(4),Pos(1):Pos(1)+Pos(3));
 imtric=imtric(Pos(2):Pos(2)+Pos(4),Pos(1):Pos(1)+Pos(3));
+jct=[jct(:,1)-Pos(1) jct(:,2)-Pos(2)];
 w=length(im_jct(1,:));
 ht=length(im_jct(:,1));
 im_jct = adapthisteq(im_jct);
@@ -196,9 +197,11 @@ end
 toc
 if detectjcts
    %pjcts=unique(pjcts);
-   jct=[jctorig;jct(pjcts,1)+Pos(1) jct(pjcts,2)+Pos(2)]; 
+   jct=[jctorig;jct(pjcts,1) jct(pjcts,2)]; 
    truejcts=[truejcts;true(length(pjcts),1)];
 end
+
+jct=[jct(:,1)+Pos(1) jct(:,2)+Pos(2)];
 % for i=1:Num
 %         [region_row, region_col]=find(L==i);
 %         region_coord=[region_row region_col];
