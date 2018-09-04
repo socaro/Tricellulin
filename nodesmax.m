@@ -10,6 +10,8 @@ function [xcoords,ycoords]=nodesmax(im,threshold,s)
     else 
         [pstruct, ~, ~, ~] = pointSourceDetection(imgPadded, threshold, 'mode','xy');
     end
+    xcoords=[];
+    ycoords=[];
     if ~isempty(pstruct)
 %         if (length(pstruct.x)>20)
             id=1;
@@ -31,7 +33,8 @@ function [xcoords,ycoords]=nodesmax(im,threshold,s)
 %             xcoords=[];
 %             ycoords=[];
 %         end
-    else
+    end
+    if isempty(xcoords)
                pstruct.x=length(imgPadded(:,1))/2;
                pstruct.y=length(imgPadded(:,1))/2;
                xcoords = pstruct.x' - padDim;

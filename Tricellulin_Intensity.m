@@ -137,6 +137,9 @@ switch eventdata.Character
         s=handles.cellrowcurrent;
         set(handles.woundrow,'String',num2str(s));
         guidata(hObject,handles);
+    case 'm'
+        handles=changejunction(handles);
+        guidata(hObject,handles);
     case 'o'
         handles.cellrowcurrent=handles.cellrowcurrent-1;
         s=handles.cellrowcurrent;
@@ -608,8 +611,8 @@ axes(handles.axes1);
             cn=[cn; c(i)];
             rn=[rn; r(i)];
         else
-            cn=[cn; cc+c(i)-s];
-            rn=[rn; rr+r(i)-s];
+            cn=[cn; cc'+c(i)-s];
+            rn=[rn; rr'+r(i)-s];
         end
     end
 %[c,r,~]=impixel(handles.im);
@@ -660,7 +663,18 @@ axes(handles.axes1);
  end
  guidata(hObject,handles);
 
-
+    function handles = changejunction(handles)
+       [x,y] = ginput(1);%('Color','r');
+       [xnew,ynew]=ginput(1);
+       if ~isempty(x)&&~isempty(xnew)
+        [IDX,~] = knnsearch([handles.c,handles.r],[x,y]);
+        handles.c(IDX)=xnew;handles.r(IDX)=ynew;
+        for i=1:length(handles.cell_in)
+            if ~isempty(find(handles.cell_in{i}==IDX))
+            handles=createcell(handles,handles.cell_in{i},i);
+            end
+        end
+       end
 
 function addjctsigma_Callback(hObject, eventdata, handles)
 % hObject    handle to addjctsigma (see GCBO)
