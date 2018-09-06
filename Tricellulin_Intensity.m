@@ -443,9 +443,9 @@ else
         signal{i}=cell_tric{i}(1:length(angles{i}));
         signal{i}=signal{i}./tric_avg;
         cell_tric_avg_n(i)=handles.cell_tric_avg(i)/tric_avg;
-        in=cell_jcts{i};
-        for j=1:length(in)
-            jctangles{in(j)}=[jctangles{in(j)} angles{i}(j)];
+        in{i}=cell_jcts{i}(handles.truejct(cell_jcts{i})==1);
+        for j=1:length(in{i})
+            jctangles{in{i}(j)}=[jctangles{in{i}(j)} angles{i}(j)];
         end
     end
     cell_tric_avg_abs=handles.cell_tric_avg;
@@ -472,8 +472,8 @@ for i=1:length(cells)
    anglesmat(i,1:length(angles{i}))=[angles{i}].*(180/pi);
    end
 %    signalmat(i,1:length(cell_tric{i}))=[cell_tric{i}];
-   anglestd_jct{i}=anglestd(cell_jcts{i});
-   anglerange_jct{i}=anglerange(cell_jcts{i});
+   anglestd_jct{i}=anglestd(in{i});
+   anglerange_jct{i}=anglerange(in{i});
    signal_std(i)=std(signal{i});
 end
 anglescol=cell2mat(angles).*(180/pi);
