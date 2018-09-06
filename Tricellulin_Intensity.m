@@ -255,7 +255,7 @@ for i=1:length(x)-2
    end
    handles.cell_in{f}(i)=innew;
 end
-handles.cell_in{f}=handles.cell_in{f}(truejct_c);
+%handles.cell_in{f}=handles.cell_in{f}(truejct_c);
 handles.angles{f}=handles.angles{f}(truejct_c);
 handles.cell_tric{f}=handles.cell_tric{f}(truejct_c);
 handles.cell_njcts(f)=length(handles.cell_in{f});
