@@ -492,7 +492,9 @@ pgons=handles.pgons;
 truejct=handles.truejct;
 save(fullfile(handles.pathname,name),'cells','cell_area','cell_perimeter','cell_njcts','pgons','cell_jcts','cell_tric','cell_tric_avg_n','cell_tric_avg_abs','x','y','umtopix','imname','angles','angles_range','truejct','anglescol','anglestdcol','anglerangecol','signalcol','signal_std','cellrow');
 A=[{name,'','','','','','','','','','','','','','','','','','';'cell_njcts','cell_tric_avg','cell_tric_avg_n','signal_std','cell_area','cell_perimeter','shape_factor','angles_range','cellrow','angle1','angle2','angle3','angle4','angle5','angle6','angle7','angle8','angle9','angle10'};mat2cell([cell_njcts(1:length(cells))',cell_tric_avg_abs(1:length(cells))',cell_tric_avg_n(1:length(cells))',signal_std(1:length(cells)),cell_area(1:length(cells))',cell_perimeter(1:length(cells))',cell_sf(1:length(cells))',angles_range(1:length(cells))',cellrow(1:length(cells))',anglesmat],ones(length(cells),1),ones(1,19))];
-excelname=['Excels/TricellulinIntensity' imname(1:8) '.xlsx'];
+pathname=which('Tricellulin_Intensity.m');
+pathname=pathname(1:end-23);
+excelname=[pathname 'Excels/TricellulinIntensity' imname(1:8) '.xlsx'];
 type=imname(end-15:end-5);
 % if exist(excelname,'file')==2
 %     %excel=xlsread('TricellulinIntensity.xlsx');
@@ -506,7 +508,8 @@ type=imname(end-15:end-5);
 ind=find(anglestdcol);
 %Asignal=[{name,'','','','','','','','','','','','','','','','','','','';'angle1','angle2','angle3','angle4','angle5','angle6','angle7','angle8','angle9','angle10','signal1','signal2','signal3','signal4','signal5','signal6','signal7','signal8','signal9','signal10'};mat2cell([anglesmat,signalmat],ones(length(cell_njcts),1),ones(1,20))];
 Asignal=[{name,'','','';'angle','angle std','angle range','signal'};mat2cell([anglescol(ind)',anglestdcol(ind)',anglerangecol(ind)',signalcol(ind)'],ones(length(signalcol(ind)),1),ones(1,4))];
-excelname=['Excels/TricellulinAngle' imname(1:8) '.xlsx'];
+
+excelname=[pathname 'Excels\TricellulinAngle' imname(1:8) '.xlsx'];
 
 % if exist(excelname,'file')==2
 %     %excel=xlsread('TricellulinIntensity.xlsx');
