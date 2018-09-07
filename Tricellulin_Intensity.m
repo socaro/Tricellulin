@@ -411,6 +411,7 @@ angles=handles.angles;
 jctangles=cell(length(handles.c),1);
 cellrow=handles.cellrow;
 
+in=cell(size(cell_jcts));
 angles_range=handles.angles_range;
 bwcat=imbinarize(handles.imcat,'adaptive');
 %tric_avg=mean(mean(handles.imtric));

@@ -5,7 +5,9 @@ tic
 Pos=getPosition(h);
 im_jct=im_jct(Pos(2):Pos(2)+Pos(4),Pos(1):Pos(1)+Pos(3));
 imtric=imtric(Pos(2):Pos(2)+Pos(4),Pos(1):Pos(1)+Pos(3));
+if ~isempty(jct)
 jct=[jct(:,1)-Pos(1) jct(:,2)-Pos(2)];
+end
 w=length(im_jct(1,:));
 ht=length(im_jct(:,1));
 im_jct = adapthisteq(im_jct);
