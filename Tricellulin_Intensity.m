@@ -241,7 +241,7 @@ end
 %handles.cell_in{f}=handles.cell_in{f}(truejct_c);
 handles.angles{f}=handles.angles{f}(truejct_c);
 handles.cell_tric{f}=handles.cell_tric{f}(truejct_c);
-handles.cell_njcts(f)=length(handles.cell_in{f});
+handles.cell_njcts(f)=length(handles.cell_in{f}(truejct_c));
 handles.cell_tric_avg(f)=mean(handles.cell_tric{f});
 handles.angles_range(f)=range(handles.angles{f})*(180/pi);
 handles.cell_area(f)=area(handles.pgons{f});
