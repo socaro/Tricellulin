@@ -22,7 +22,7 @@ function varargout = Tricellulin_Intensity(varargin)
 
 % Edit the above text to modify the response to help Tricellulin_Intensity
 
-% Last Modified by GUIDE v2.5 16-Aug-2018 09:26:57
+% Last Modified by GUIDE v2.5 10-Sep-2018 11:36:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,6 +75,8 @@ handles.binarytric=false;
 handles.cellsize=1024/11;
 handles.detectjcts=false;
 handles.cellrowcurrent=1;
+handles.zoom=zoom;
+handles.pan=pan;
 handles.colors=['g','w','y','m','b','r','c','k','g','w','y','m','b','r','k','g','w','y','m','b','r','c'];
 % Update handles structure
 guidata(hObject, handles);
@@ -83,6 +85,13 @@ guidata(hObject, handles);
 % uiwait(handles.figure1);
 
 
+function Tricellulin_Intensity_OutputFcn(hObject, eventdata, handles, varargin)
+% 
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   unrecognized PropertyName/PropertyValue pairs from the
+%            command line (see VARARGIN)
 
 % --- Executes on key press with focus on figure1 or any of its controls.
 function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
@@ -128,6 +137,11 @@ switch eventdata.Character
         s=handles.cellrowcurrent;
         set(handles.woundrow,'String',num2str(s));
         guidata(hObject,handles);
+    case 'z'
+        uitoggletool1_ClickedCallback(hObject, eventdata, handles);
+    case 't'
+        uitoggletool3_ClickedCallback(hObject, eventdata, handles);
+        
         
 end
 
@@ -1055,3 +1069,52 @@ function woundrow_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+
+% --------------------------------------------------------------------
+function uitoggletool1_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to uitoggletool1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% if strcmp(handles.zoom.Enable,'on')
+%     handles.zoom.Enable='off';
+% else
+    handles.zoom.Enable='on';
+    handles.uitoggletool1.Visible='off';
+    handles.uitoggletool3.Visible='off';
+    while true
+    k=waitforbuttonpress;
+    if k==1
+    handles.zoom.Enable='off';
+    handles.uitoggletool1.Visible='on';
+    handles.uitoggletool3.Visible='on';
+    break;
+    end
+    end
+% end
+
+
+% --------------------------------------------------------------------
+function uitoggletool3_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to uitoggletool3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% if strcmp(handles.pan.Enable,'on')
+%     handles.pan.Enable='off';
+% else
+
+    handles.pan.Enable='on';
+    handles.uitoggletool3.Visible='off';
+    handles.uitoggletool1.Visible='off';
+    while true
+    k=waitforbuttonpress;
+    if k==1
+    handles.pan.Enable='off';
+    handles.uitoggletool3.Visible='on';
+    handles.uitoggletool1.Visible='on';
+    break;
+    end
+    end
+% end
