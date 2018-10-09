@@ -22,7 +22,7 @@ function varargout = Tricellulin_Intensity(varargin)
 
 % Edit the above text to modify the response to help Tricellulin_Intensity
 
-% Last Modified by GUIDE v2.5 10-Sep-2018 11:36:24
+% Last Modified by GUIDE v2.5 09-Oct-2018 15:40:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,13 +71,14 @@ set(handles.objective,'String',[{'40x Objective'};{'60x Objective'}]);
 handles.umtopix=0.325;
 handles.s_tric=1;
 handles.addsigma=1.5;
-handles.binarytric=false;
 handles.cellsize=1024/11;
 handles.detectjcts=false;
 handles.cellrowcurrent=1;
 handles.zoom=zoom;
 handles.pan=pan;
-handles.colors=['g','w','y','m','b','r','c','k','g','w','y','m','b','r','k','g','w','y','m','b','r','c'];
+handles.colors=colormap('prism');
+%handles.colors=['g','w','y','m','b','r','c','k','g','w','y','m','b','r','k','g','w','y','m','b','r','c'];
+handles.allowdelete='true';
 % Update handles structure
 guidata(hObject, handles);
 
@@ -103,7 +104,9 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 switch eventdata.Character
     case 'd'
+        if handles.allowdelete
         deletejunctions_Callback(hObject, eventdata, handles)
+        end
     case 'a'
         addjunctions_Callback(hObject, eventdata, handles)
     case 'q'
@@ -141,6 +144,14 @@ switch eventdata.Character
         uitoggletool1_ClickedCallback(hObject, eventdata, handles);
     case 't'
         uitoggletool3_ClickedCallback(hObject, eventdata, handles);
+    case 'y'
+        handles=yap(handles);
+        handles.cellrow(handles.yaploc<1.1)=1;
+        handles.cellrow(isnan(handles.yaploc))=1;
+        handles.cellrow(handles.yaploc>=1.1)=2;
+        guidata(hObject,handles);
+    case '1'
+        tricnormalize(handles.cell_in,handles);
         
         
 end
@@ -150,7 +161,7 @@ function selectimage_Callback(hObject, eventdata, handles)
 % hObject    handle to selectimage (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[imname,pathname]=uigetfile('*.tif','Select B-Catenin Image');
+[imname,pathname]=uigetfile('*cat_.tif','Select B-Catenin Image');
 if imname~=0
 handles.pathname=pathname;
 handles.imname=strrep(imname,'.tif','');
@@ -395,6 +406,49 @@ guidata(hObject,handles);
 %        contents{get(hObject,'Value')} returns selected item from celllist
 
 
+
+function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,handles]=tricnormalize(cell_jcts,handles)
+   jctangles=cell(length(handles.c),1);
+   bwcat=imbinarize(handles.imcat,'adaptive');
+   for i=1:length(cell_jcts)
+        in{i}=cell_jcts{i}(handles.truejct(cell_jcts{i})==1);
+        smask=10;
+        nr=size(handles.imtric,1);nc=size(handles.imtric,2);
+        jctmask=zeros(nr,nc);
+        for j=1:length(in{i})
+            jctangles{in{i}(j)}=[jctangles{in{i}(j)} handles.angles{i}(j)];
+            row=round(handles.r(in{i}(j)));col=round(handles.c(in{i}(j)));
+            rowstart=row-smask; if rowstart<1;rowstart=1;end
+            rowend=row+smask; if rowend>nr;rowend=nr;end
+            colstart=col-smask; if colstart<1;colstart=1;end
+            colend=col+smask; if colend>nr;colend=nr;end
+            jctmask(rowstart:rowend,colstart:colend)=1;
+        end
+        %jctmask=jctmask(1:nr,1:size(nc);
+        [cx,cy]=centroid(handles.pgons{i});
+        polyout = scale(handles.pgons{i},1.1,[cx cy]);
+        [x,y]=boundary(polyout);
+        BW=poly2mask(x,y,nr,nc);
+        mask=~jctmask.*BW.*bwcat;
+        %mask=imerode(mask,strel('disk',1));
+        %tric_mask=uint16(~jctmask).*uint16(BW).*handles.imtric.*uint16(bwcat);
+        tric_mask=uint16(mask).*handles.imtric;
+        tric_avg=mean(mean(tric_mask(tric_mask~=0)));
+%         signal{i}=cell_tric{i}(1:length(angles{i}));
+%         signal{i}=signal{i}./tric_avg;
+        indices=sub2ind(size(handles.imtric),round(handles.r(in{i})),round(handles.c(in{i})));
+        signal{i}=double(handles.imtric(indices)).';
+        cell_tric_avg_abs(i)=mean(signal{i});
+        cell_tric_avg_n(i)=cell_tric_avg_abs(i)/tric_avg;
+%        cell_tric_avg_n(i)=handles.cell_tric_avg(i)/tric_avg;
+        
+   end
+   cell_tric_plot=round(32*(cell_tric_avg_n-1)+1);
+   cell_tric_plot(cell_tric_plot>64)=64;
+   colors=colormap('jet');
+   plotpgons(handles,cell_tric_plot,colors);
+        
+
 % --- Executes on button press in save.
 function save_Callback(hObject, eventdata, handles)
 % hObject    handle to save (see GCBO)
@@ -405,49 +459,19 @@ cells=handles.cells;
 cell_jcts=handles.cell_in;
 cell_tric=handles.cell_tric;
 angles=handles.angles;
-jctangles=cell(length(handles.c),1);
+
 cellrow=handles.cellrow;
 
 in=cell(size(cell_jcts));
 angles_range=handles.angles_range;
-bwcat=imbinarize(handles.imcat,'adaptive');
+
 %tric_avg=mean(mean(handles.imtric));
-if handles.binarytric==true
-    name=[handles.imname handles.nameaddon 'binary.mat'];
-    for i=1:length(cell_jcts)
-        %BW=roipoly(handles.imtric,handles.c(cell_jcts{i}),handles.r(cell_jcts{i}));
-%         [x,y]=boundary(handles.pgons{i});
-%         BW=poly2mask(x,y,size(handles.imtric,1),size(handles.imtric,2));
-%         tric_mask=uint16(BW).*handles.imtric.*uint16(bwcat);
-%         tric_avg=mean(mean(tric_mask(tric_mask~=0)));
-        [cx,cy]=centroid(handles.pgons{i});
-        polyout = scale(handles.pgons{i},1.4,[cx cy]);
-        [x,y]=boundary(polyout);
-        BW=poly2mask(x,y,size(handles.imtric,1),size(handles.imtric,2));
-        tric_mask=uint16(BW).*handles.imtric.*uint16(bwcat);
-        tric_avg=mean(mean(tric_mask(tric_mask~=0)));
-        cell_tric_avg_n(i)=mean(handles.cell_tric{i}>1.3*tric_avg);
-    end
-    cell_tric_avg_abs=handles.cell_tric_avg;
-else
-    name=[handles.imname handles.nameaddon '.mat'];
-    for i=1:length(cell_jcts)
-        [cx,cy]=centroid(handles.pgons{i});
-        polyout = scale(handles.pgons{i},1.1,[cx cy]);
-        [x,y]=boundary(polyout);
-        BW=poly2mask(x,y,size(handles.imtric,1),size(handles.imtric,2));
-        tric_mask=uint16(BW).*handles.imtric.*uint16(bwcat);
-        tric_avg=mean(mean(tric_mask(tric_mask~=0)));
-        signal{i}=cell_tric{i}(1:length(angles{i}));
-        signal{i}=signal{i}./tric_avg;
-        cell_tric_avg_n(i)=handles.cell_tric_avg(i)/tric_avg;
-        in{i}=cell_jcts{i}(handles.truejct(cell_jcts{i})==1);
-        for j=1:length(in{i})
-            jctangles{in{i}(j)}=[jctangles{in{i}(j)} angles{i}(j)];
-        end
-    end
-    cell_tric_avg_abs=handles.cell_tric_avg;
-end
+name=[handles.imname handles.nameaddon '.mat'];
+
+[cell_tric_avg_n,cell_tric_avg_abs,jctangles,handles]=tricnormalize(cell_jcts,handles);
+    
+%cell_tric_avg_abs=handles.cell_tric_avg;
+
 anglestd=zeros(1,length(jctangles));
 anglerange=zeros(1,length(jctangles));
 for i=1:length(jctangles)
@@ -732,13 +756,18 @@ function polygons_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(gcf,'Pointer','arrow');
+plotpgons(handles,handles.cellrow,handles.colors);
+
+
+
+function plotpgons(handles,type,colors)
 axes(handles.axes1);
 cla(handles.axes1);
 imshow(handles.imfuse);
 hold on; scatter(handles.c(handles.truejct==1),handles.r(handles.truejct==1),200,'.','r');
  hold on; scatter(handles.c(~handles.truejct==1),handles.r(~handles.truejct==1),200,'.','b');
 for i=1:length(handles.cells)
-    hold on; plot(handles.pgons{i},'FaceColor',handles.colors(handles.cellrow(i)),'FaceAlpha',0.3,'EdgeAlpha',0.5);
+    hold on; plot(handles.pgons{i},'FaceColor',colors(type(i),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
 end
 axes(handles.axes2);
 cla(handles.axes2);
@@ -746,25 +775,9 @@ imshow(imadjust(handles.imtric));
  hold on; scatter(handles.c(handles.truejct==1),handles.r(handles.truejct==1),100,'.','b');
  hold on; scatter(handles.c(~handles.truejct==1),handles.r(~handles.truejct==1),100,'.','g');
 for i=1:length(handles.cells)
-    hold on; plot(handles.pgons{i},'FaceColor',handles.colors(handles.cellrow(i)),'FaceAlpha',0.3,'EdgeAlpha',0.5);
+    hold on; plot(handles.pgons{i},'FaceColor',colors(type(i),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
 end
 
-
-% --- Executes on button press in binary.
-function binary_Callback(hObject, eventdata, handles)
-% hObject    handle to binary (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.binarytric=get(hObject,'Value');
-guidata(hObject,handles);
-
-% if handles.binarytric==false
-%     handles.binarytric=true;
-% else
-%     handles.binarytric=false;
-% end
-
-% Hint: get(hObject,'Value') returns toggle state of binary
 
 
 % --- Executes on selection change in objective.
@@ -824,6 +837,9 @@ handles.cells=cells;
 handles.pgons=pgons;
 handles.cell_njcts=cell_njcts;
 handles.umtopix=umtopix;
+handles.cell_area=[];
+handles.cell_perimeter=[];
+handles.angles_range=[];
 for i=1:length(cells)
 handles.cell_area(i)=area(handles.pgons{i});
 handles.cell_perimeter(i)=perimeter(handles.pgons{i});
@@ -964,6 +980,12 @@ set(handles.celllist,'Value',f);
 h=impoly;
 Pos=getPosition(h);
 in=find(inpolygon(handles.c,handles.r,Pos(:,1),Pos(:,2)));
+
+% h=imrect;
+% Pos=getPosition(h);
+% in=find(inpolygon(handles.c,handles.r,[Pos(1) Pos(1) Pos(1)+Pos(3) Pos(1)+Pos(3) Pos(1)],[Pos(2) Pos(2)+Pos(4) Pos(2)+Pos(4) Pos(2) Pos(2)]));
+% 
+
 handles=createcell(handles,in,f);
 delete(h);
 guidata(hObject,handles);
@@ -1118,3 +1140,39 @@ function uitoggletool3_ClickedCallback(hObject, eventdata, handles)
     end
     end
 % end
+
+
+    function handles=yap(handles)
+        handles.yaploc=zeros(length(handles.cell_in),1);
+        imyap=imread(fullfile(handles.pathname,[strrep(handles.imname,'_cat_','_yap_') '.tif']));
+        bwnuc=imbinarize(handles.imnuc,'adaptive','Sensitivity',0.6);
+        bwnuc=imerode(bwnuc,strel('disk',1));
+        bwnuc=bwareaopen(bwnuc,40);
+        bwnuc=imfill(bwnuc,'holes');
+        for i=1:length(handles.cell_in)
+         [x,y]=boundary(handles.pgons{i});
+         BWpgon=poly2mask(x,y,size(handles.imtric,1),size(handles.imtric,2));
+         nucmask=BWpgon.*bwnuc;
+         nucid=find(nucmask~=0);
+         if length(nucid)>100
+         cellmask=BWpgon.*(~bwnuc);
+         signalyap=imyap.*uint16(cellmask);
+         signalyapnuc=imyap.*uint16(nucmask);
+         yapcell=mean(mean(signalyap(cellmask~=0)));
+         yapnuc=mean(mean(signalyapnuc(nucmask~=0)));
+         handles.yaploc(i)=yapnuc/yapcell;
+         else
+             handles.yaploc(i)=NaN;
+         end
+         
+        end
+
+
+% --- Executes on button press in disabledelete.
+function disabledelete_Callback(hObject, eventdata, handles)
+% hObject    handle to disabledelete (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.allowdelete=~get(hObject,'Value');
+guidata(hObject,handles);
+% Hint: get(hObject,'Value') returns toggle state of disabledelete

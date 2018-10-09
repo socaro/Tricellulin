@@ -13,7 +13,8 @@ ht=length(im_jct(:,1));
 im_jct = adapthisteq(im_jct);
 
 im_jct = imadjust(im_jct);
-im_jct = medfilt2(im_jct,[round(s/15) round(s/15)]);                        % filter noise
+%im_jct = medfilt2(im_jct,[round(s/15) round(s/15)]);                        % filter noise
+
 ljct=0;
 
 
@@ -35,8 +36,16 @@ if edgedetect
     end
     edin=imerode(edin,strel('disk',1));
 else
-    edin=imbinarize(im_jct,'adaptive');%,'Sensitivity',0.25);
+    edin=imbinarize(im_jct,'adaptive','Sensitivity',0.2);
+    %edin=imdilate(edin,strel('disk',1));
     %edin=imfill(~edin,'holes');
+    stats=regionprops(edin,'Eccentricity','PixelIdxList');
+    edinnew=zeros(size(edin));
+    for i=1:length(stats)
+        if stats(i).Eccentricity<0.6
+            edinnew(stats(i).PixelIdxList)=1;
+        end
+    end
     edin=bwareaopen(edin,100);
     edin=imerode(~edin,strel('disk',round(s/20)));
     edin=imfill(edin,'holes');
