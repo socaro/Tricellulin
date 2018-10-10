@@ -548,8 +548,8 @@ anglestd_jct=cell(1,length(cells));
 anglestd_range=cell(1,length(cells));
 signal_std=zeros(length(cells),1);
 for i=1:length(cells)
-    
-    handles.cell_njcts(i)=length(handles.cell_in{i}(handles.truejct(handles.cell_in{i})==1));
+    in{i}=handles.cell_in{i}(handles.truejct(handles.cell_in{i})==1);
+    handles.cell_njcts(i)=length(in{i});
     handles.angles_range(i)=range(handles.angles{i})*(180/pi);
     handles.cell_area(i)=area(handles.pgons{i});
     handles.cell_perimeter(i)=perimeter(handles.pgons{i});
@@ -579,7 +579,7 @@ cell_njcts=handles.cell_njcts;
 pgons=handles.pgons;
 truejct=handles.truejct;
 save(fullfile(handles.pathname,name),'cells','cell_area','cell_perimeter','cell_njcts','pgons','cell_jcts','cell_tric_avg_n','cell_tric_avg_abs','x','y','umtopix','imname','angles','anglerange','truejct','anglescol','anglestdcol','anglerangecol','signalcol','signal_std','cellrow');
-A=[{name,'','','','','','','','','','','','','','','','','','';'cell_njcts','cell_tric_avg','cell_tric_avg_n','signal_std','cell_area','cell_perimeter','shape_factor','anglerange','cellrow','angle1','angle2','angle3','angle4','angle5','angle6','angle7','angle8','angle9','angle10'};mat2cell([cell_njcts(1:length(cells))',cell_tric_avg_abs(1:length(cells))',cell_tric_avg_n(1:length(cells))',signal_std(1:length(cells)),cell_area(1:length(cells))',cell_perimeter(1:length(cells))',cell_sf(1:length(cells))',angles_range(1:length(cells))',cellrow(1:length(cells))',anglesmat],ones(length(cells),1),ones(1,19))];
+A=[{name,'','','','','','','','','','','','','','','','','','';'cell_njcts','cell_tric_avg','cell_tric_avg_n','signal_std','cell_area','cell_perimeter','shape_factor','anglerange','cellrow','angle1','angle2','angle3','angle4','angle5','angle6','angle7','angle8','angle9','angle10'};mat2cell([cell_njcts(1:length(cells))',cell_tric_avg_abs(1:length(cells))',cell_tric_avg_n(1:length(cells))',signal_std(1:length(cells)),cell_area(1:length(cells))',cell_perimeter(1:length(cells))',cell_sf(1:length(cells))',anglerange(1:length(cells))',cellrow(1:length(cells))',anglesmat],ones(length(cells),1),ones(1,19))];
 pathname=which('Tricellulin_Intensity.m');
 pathname=pathname(1:end-23);
 excelname=[pathname 'Excels/TricellulinIntensity' imname(1:8) '.xlsx'];
