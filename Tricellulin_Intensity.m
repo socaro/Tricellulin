@@ -702,8 +702,8 @@ axes(handles.axes1);
             cn=[cn; c(i)];
             rn=[rn; r(i)];
         else
-            cn=[cn; cc'+c(i)-s];
-            rn=[rn; rr'+r(i)-s];
+            cn=[cn; cc'+c(i)-s-1];
+            rn=[rn; rr'+r(i)-s-1];
         end
     end
 %[c,r,~]=impixel(handles.im);
