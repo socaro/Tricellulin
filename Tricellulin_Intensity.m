@@ -529,7 +529,7 @@ in=cell(size(cell_jcts));
 name=[handles.imname handles.nameaddon '.mat'];
 
 [cell_tric_avg_n,cell_tric_avg_abs,jctangles,handles]=tricnormalize(cell_jcts,handles);
-    
+signal=cell_tric_avg_n;
 %cell_tric_avg_abs=handles.cell_tric_avg;
 
 anglestd=zeros(1,length(jctangles));
