@@ -152,6 +152,12 @@ switch eventdata.Character
         guidata(hObject,handles);
     case '1'
         tricnormalize(handles.cell_in,handles);
+    case '9'
+        handles = deletecell(hObject,eventdata,handles);
+        %guidata(hObject,handles);
+    case '6'
+        handles=updatejunctions(handles);
+        guidata(hObject,handles);
         
         
 end
@@ -187,12 +193,12 @@ handles.cells={};
 handles.angles={};
 handles.pgons={};
 handles.cell_in={};
-handles.cell_tric={};
-handles.angles_range=[];
-handles.cell_tric_avg=[];
-handles.cell_njcts=[];
-handles.cell_area=[];
-handles.cell_perimeter=[];
+%handles.cell_tric={};
+%handles.angles_range=[];
+%handles.cell_tric_avg=[];
+%handles.cell_njcts=[];
+%handles.cell_area=[];
+%handles.cell_perimeter=[];
 handles.c=[];
 handles.r=[];
 handles.truejct=[];
@@ -245,7 +251,7 @@ y=[y;y(2)];
 s=handles.s_tric;
 handles.cell_in{f}=zeros(1,length(x)-2);
 handles.angles{f}=zeros(1,length(x)-2);
-handles.cell_tric{f}=zeros(1,length(x)-2);
+%handles.cell_tric{f}=zeros(1,length(x)-2);
 truejct_c=false(1,length(x)-2);
 for i=1:length(x)-2
    c1=[x(i) y(i)];c2=[x(i+2) y(i+2)];c3=[x(i+1) y(i+1)];
@@ -265,20 +271,49 @@ for i=1:length(x)-2
 end
 %handles.cell_in{f}=handles.cell_in{f}(truejct_c);
 handles.angles{f}=handles.angles{f}(truejct_c);
-handles.cell_tric{f}=handles.cell_tric{f}(truejct_c);
-handles.cell_njcts(f)=length(handles.cell_in{f}(truejct_c));
-handles.cell_tric_avg(f)=mean(handles.cell_tric{f});
-handles.angles_range(f)=range(handles.angles{f})*(180/pi);
-handles.cell_area(f)=area(handles.pgons{f});
-handles.cell_perimeter(f)=perimeter(handles.pgons{f});
+% %handles.cell_tric{f}=handles.cell_tric{f}(truejct_c);
+% handles.cell_njcts(f)=length(handles.cell_in{f}(truejct_c));
+% %handles.cell_tric_avg(f)=mean(handles.cell_tric{f});
+% handles.angles_range(f)=range(handles.angles{f})*(180/pi);
+% handles.cell_area(f)=area(handles.pgons{f});
+% handles.cell_perimeter(f)=perimeter(handles.pgons{f});
 handles.cellrow(f)=handles.cellrowcurrent;
-hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f)),'FaceAlpha',0.3,'EdgeAlpha',0.5);
+hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
 axes(handles.axes2);
-hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f)),'FaceAlpha',0.3,'EdgeAlpha',0.5);
-set(handles.info,'String',sprintf('Cell: %d, Tricellulin Intensity: %d, Avg all cells: %d', f,handles.cell_tric_avg(f),mean(handles.cell_tric_avg)));
+hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
+%set(handles.info,'String',sprintf('Cell: %d, Tricellulin Intensity: %d, Avg all cells: %d', f,handles.cell_tric_avg(f),mean(handles.cell_tric_avg)));
 set(handles.polygons,'Enable','on');
 set(handles.clearjcts,'Enable','off');
 
+
+
+function handles = deletecell(hObject,eventdata,handles)
+axes(handles.axes1)
+f=0;
+[c,r]=my_ginput;
+deletecells=false(size(handles.cells));
+for n=1:length(c)
+for i=1:length(handles.cell_in)
+    if isinterior(handles.pgons{i},c(n),r(n))
+        f=i;
+        deletecells(i)=true;
+        break;
+    end
+end
+
+end
+handles.cells=handles.cells(~deletecells);
+handles.cell_in=handles.cell_in(~deletecells);
+handles.pgons=handles.pgons(~deletecells);
+handles.angles=handles.angles(~deletecells);
+handles.cellrow=handles.cellrow(~deletecells);
+celllist=get(handles.celllist,'String');
+celllist=celllist(~deletecells);
+set(handles.celllist,'Value',length(handles.cells));
+set(handles.celllist,'String',celllist);
+
+polygons_Callback(hObject,eventdata,handles);
+guidata(hObject,handles);
 
 
 function handles = changecellrow(hObject,eventdata,handles)
@@ -406,6 +441,31 @@ guidata(hObject,handles);
 %        contents{get(hObject,'Value')} returns selected item from celllist
 
 
+function handles=updatejunctions(handles)
+    for i=1:length(handles.pgons)
+        %tic;
+        innew1=[];
+        [x,y]=boundary(handles.pgons{i});
+        for j=1:length(x)-1
+        innew1(j)=knnsearch([handles.c handles.r],[x(j) y(j)]);
+        end
+        handles.cell_in{i}=innew1;
+        %toc;
+        
+%        alternative: faster, but less accurate
+%         tic;
+%         [cx,cy]=centroid(handles.pgons{i});
+%         polyout = scale(handles.pgons{i},1.1,[cx cy]);
+%         [x,y]=boundary(polyout);
+%         TFin=isinterior(polyout,handles.c,handles.r);
+%         a=1:length(TFin);
+%         innew2=a(TFin);
+%         handles.cell_in{i}=innew2;
+%         toc;
+    end
+        
+        
+
 
 function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,handles]=tricnormalize(cell_jcts,handles)
    jctangles=cell(length(handles.c),1);
@@ -457,13 +517,13 @@ function save_Callback(hObject, eventdata, handles)
 imname=handles.imname;
 cells=handles.cells;
 cell_jcts=handles.cell_in;
-cell_tric=handles.cell_tric;
+%cell_tric=handles.cell_tric;
 angles=handles.angles;
 
 cellrow=handles.cellrow;
 
 in=cell(size(cell_jcts));
-angles_range=handles.angles_range;
+%angles_range=handles.angles_range;
 
 %tric_avg=mean(mean(handles.imtric));
 name=[handles.imname handles.nameaddon '.mat'];
@@ -488,6 +548,12 @@ anglestd_jct=cell(1,length(cells));
 anglestd_range=cell(1,length(cells));
 signal_std=zeros(length(cells),1);
 for i=1:length(cells)
+    
+    handles.cell_njcts(i)=length(handles.cell_in{i}(handles.truejct(handles.cell_in{i})));
+    handles.angles_range(i)=range(handles.angles{i})*(180/pi);
+    handles.cell_area(i)=area(handles.pgons{i});
+    handles.cell_perimeter(i)=perimeter(handles.pgons{i});
+    
    if length(angles{i})>10
        anglesmat(i,1:10)=[angles{i}(1:10)].*(180/pi);
    else
@@ -813,7 +879,7 @@ end
 
 function handles=loaddata(handles,matname,pathname)
 if matname~=0
-load(fullfile(pathname,matname),'imname','cells','cell_area','cell_tric_avg_abs','cell_perimeter','cell_njcts','pgons','cell_jcts','cell_tric','x','y','umtopix','angles','angles_range');
+load(fullfile(pathname,matname),'imname','cells','pgons','cell_jcts','x','y','umtopix','angles'); %'cell_area','cell_tric_avg_abs','cell_perimeter','cell_njcts','cell_tric','angles_range'
 try
   load(fullfile(pathname,matname),'truejct');
   handles.truejct=truejct;
@@ -829,29 +895,29 @@ end
 handles.imname=strrep(imname,'cat_*','cat_');
 imname=[imname '.tif'];
 set(handles.imagename,'String',imname);
-handles.cell_tric_avg=cell_tric_avg_abs;
+%handles.cell_tric_avg=cell_tric_avg_abs;
 handles.angles=angles;
 handles.cellrowcurrent=1;
 %handles.angles_range=angles_range;
 handles.cells=cells;
 handles.pgons=pgons;
-handles.cell_njcts=cell_njcts;
+%handles.cell_njcts=cell_njcts;
 handles.umtopix=umtopix;
-handles.cell_area=[];
-handles.cell_perimeter=[];
-handles.angles_range=[];
-for i=1:length(cells)
-handles.cell_area(i)=area(handles.pgons{i});
-handles.cell_perimeter(i)=perimeter(handles.pgons{i});
-handles.angles_range(i)=range(handles.angles{i})*(180/pi);
-end
+%handles.cell_area=[];
+%handles.cell_perimeter=[];
+%handles.angles_range=[];
+%for i=1:length(cells)
+%handles.cell_area(i)=area(handles.pgons{i});
+%handles.cell_perimeter(i)=perimeter(handles.pgons{i});
+%handles.angles_range(i)=range(handles.angles{i})*(180/pi);
+%end
 %handles.cell_area=cell_area/umtopix;
 %handles.cell_perimeter=cell_perimeter/umtopix;
 handles.pgons=pgons;
 handles.c=x;
 handles.r=y;
 handles.cell_in=cell_jcts;
-handles.cell_tric=cell_tric;
+%handles.cell_tric=cell_tric;
 handles.pathname=pathname;
 handles.imcat=imread(fullfile(pathname,imname));
 handles.imnuc=imread(fullfile(pathname,strrep(imname,'_cat_','_nuc_')));
