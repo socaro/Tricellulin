@@ -443,25 +443,25 @@ guidata(hObject,handles);
 
 function handles=updatejunctions(handles)
     for i=1:length(handles.pgons)
-        %tic;
+        tic;
         innew1=[];
         [x,y]=boundary(handles.pgons{i});
         for j=1:length(x)-1
         innew1(j)=knnsearch([handles.c handles.r],[x(j) y(j)]);
         end
         handles.cell_in{i}=innew1;
-        %toc;
+        toc;
         
-%        alternative: faster, but less accurate
-%         tic;
-%         [cx,cy]=centroid(handles.pgons{i});
-%         polyout = scale(handles.pgons{i},1.1,[cx cy]);
-%         [x,y]=boundary(polyout);
-%         TFin=isinterior(polyout,handles.c,handles.r);
-%         a=1:length(TFin);
-%         innew2=a(TFin);
-%         handles.cell_in{i}=innew2;
-%         toc;
+      % alternative: faster, but less accurate
+        tic;
+        %[cx,cy]=centroid(handles.pgons{i});
+        %polyout = scale(handles.pgons{i},1.1,[cx cy]);
+        %[TFin,TFon]=isinterior(polyout,handles.c,handles.r);
+        [TFin,TFon]=isinterior(handles.pgons{i},handles.c,handles.r);
+        a=1:length(TFon);
+        innew2=a(TFon);
+        handles.cell_in{i}=innew2;
+        toc;
     end
         
         
