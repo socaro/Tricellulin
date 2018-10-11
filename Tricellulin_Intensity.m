@@ -156,7 +156,9 @@ switch eventdata.Character
         handles = deletecell(hObject,eventdata,handles);
         %guidata(hObject,handles);
     case '6'
+        set(handles.info,'String','Start Update Junctions');
         handles=updatejunctions(handles);
+        set(handles.info,'String','Update Junctions finished');
         guidata(hObject,handles);
         
         
