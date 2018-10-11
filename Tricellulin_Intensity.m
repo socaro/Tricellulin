@@ -525,8 +525,9 @@ function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormal
 %        cell_tric_avg_n(i)=handles.cell_tric_avg(i)/tric_avg;
         
    end
-   cell_tric_plot=round(32*(cell_tric_avg_n-1)+1);
+   cell_tric_plot=round(32*(cell_tric_avg_n-1)+2);
    cell_tric_plot(cell_tric_plot>64)=64;
+   cell_tric_plot(cell_tric_plot<1)=1;
    colors=colormap('jet');
    plotpgons(handles,cell_tric_plot,colors);
         
