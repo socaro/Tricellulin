@@ -465,24 +465,28 @@ function handles=updatejunctions(handles)
         handles.cell_in{i}=innew2;
         %toc;
         
-%       % update junction positions
+      
+    end
+    %update junction positions
 %         s=5;
 %         c=handles.c;
 %         r=handles.r;
 %     for j=1:length(c)
-%         [cc, rr]=nodesmax(handles.imtric(r(j)-s:r(j)+s,c(j)-s:c(j)+s),handles.addsigma,2);
-%         if isempty(cc)
-%             cn(j)=c(j);rn(j)=r(j);
-%         else
+%         try
+%             [cc, rr]=nodesmax(handles.imtric(r(j)-s:r(j)+s,c(j)-s:c(j)+s),handles.addsigma,4);
 %             cn(j)=cc(1)+c(j)-s-1;
 %             rn(j)=rr(1)+r(j)-s-1;
+%         catch
+%             cn(j)=c(j);rn(j)=r(j);
 %         end
-%     end
-%         handles.c=cn;
-%         handles.r=rn;
+%         handles.c=cn';
+%         handles.r=rn';
 %       
-    end
-        
+%     end
+% for i=1:length(handles.pgons)
+%    handles=createcell(handles,handles.cell_in{i}',i);
+% end
+%         
         
 
 
@@ -783,7 +787,7 @@ axes(handles.axes1);
        if ~isempty(x)&&~isempty(xnew)
         [IDX,~] = knnsearch([handles.c,handles.r],[x,y]);
         s=5;
-        [cc, rr]=nodesmax(handles.imtric(ynew-s:ynew+s,xnew-s:xnew+s),1.5,4);
+        [cc, rr]=nodesmax(handles.imtric(ynew-s:ynew+s,xnew-s:xnew+s),1.5,2);
         if ~isempty(cc)
             xnew=cc(1)+xnew-s-1;
             ynew=rr(1)+ynew-s-1;
