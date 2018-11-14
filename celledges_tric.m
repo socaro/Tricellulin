@@ -10,42 +10,43 @@ jct=[jct(:,1)-Pos(1) jct(:,2)-Pos(2)];
 end
 w=length(im_jct(1,:));
 ht=length(im_jct(:,1));
-im_jct = adapthisteq(im_jct);
+%im_jct = adapthisteq(im_jct);
 
-im_jct = imadjust(im_jct);
-%im_jct = medfilt2(im_jct,[round(s/15) round(s/15)]);                        % filter noise
+%im_jct = imadjust(im_jct);
+%im_jct1 = medfilt2(im_jct,[round(s/15) round(s/15)]);                        % filter noise
 
 ljct=0;
 
 
 
 if edgedetect
-    ed=edge(im_jct,'canny',[],1.7);
-    ed=imdilate(ed,strel('disk',round(s/35)));
-    ed=bwareaopen(ed,round((s/5)^2),4);
-    ed=imdilate(ed,strel('disk',round(s/20)));
-%    edin=bwareaopen(~ed1,round((s/6)^2),4);
-%     edin=imerode(edin,strel('disk',round(s/20)));
-%     ed1=imerode(~edin,strel('disk',round(s/30)));
-%     edin=imfill(~ed1,4,'holes');
-    edin=bwareafilt(~ed,[round((s/5)^2) round((1.7*s)^2)]);
-    edin=~bwmorph(~edin,'thin',Inf);
+    %ed=edge(im_jct,'canny',[],1.7);
+    ed=edge(im_jct,'log',[],1.5);
+    ed=bwareaopen(ed,5);
+    ed=imdilate(ed,strel('disk',1));
+    ed=bwareaopen(ed,100,4);
+    ed=imdilate(ed,strel('disk',2));
+    edin=~imfill(~ed,'holes');
+    %edin=bwareafilt(~ed,[round((s/5)^2) round((1.7*s)^2)]);
+    edin=~bwareaopen(~edin,round((s/3)^2));
+    edin=bwmorph(edin,'thin',Inf);
     edin=~bwmorph(edin,'spur',20);
     if detectjcts
         [rj, cj, ~, ~] = findendsjunctions(~edin, 0);
     end
     edin=imerode(edin,strel('disk',1));
 else
-    edin=imbinarize(im_jct,'adaptive','Sensitivity',0.2);
-    %edin=imdilate(edin,strel('disk',1));
+    edin=imbinarize(im_jct,'adaptive');%,'Sensitivity',0.55);
+    edin=bwareaopen(edin,20,4);
+    edin=imdilate(edin,strel('disk',2));
     %edin=imfill(~edin,'holes');
-    stats=regionprops(edin,'Eccentricity','PixelIdxList');
-    edinnew=zeros(size(edin));
-    for i=1:length(stats)
-        if stats(i).Eccentricity<0.6
-            edinnew(stats(i).PixelIdxList)=1;
-        end
-    end
+%     stats=regionprops(edin,'Eccentricity','PixelIdxList');
+%     edinnew=zeros(size(edin));
+%     for i=1:length(stats)
+%         if stats(i).Eccentricity<0.6
+%             edinnew(stats(i).PixelIdxList)=1;
+%         end
+%     end
     edin=bwareaopen(edin,100);
     edin=imerode(~edin,strel('disk',round(s/20)));
     edin=imfill(edin,'holes');
@@ -60,8 +61,21 @@ else
     edin=imerode(edin,strel('disk',1));
     %edin=bwareafilt(edin,[round((s/5)^2) round((2*s)^2)]);
     %edin=imclose(edin,strel('disk',round(s/8)));
- end
+end
 
+if detectjcts
+delete=false(size(rj));
+
+for i=1:length(rj)-1
+   [IDX,d] = knnsearch([rj(1:end-i-1),cj(1:end-i-1)],[rj(end-i),cj(end-i)],'K',5); 
+   d_idx=find(d<8);
+   delete(IDX(d_idx))=true;
+   
+end
+
+rj=rj(~delete);
+cj=cj(~delete);
+end
 toc
 
 %[L,Num]=bwlabel(edin);
@@ -185,7 +199,7 @@ for i=1:length(stats)
 %         currentreg(stats(i).PixelIdxList)=1;
             id=id+1;
             [idx,dist]=knnsearch(jct,region_coord,'K',2);
-            region_jcts_this=unique(idx(dist<s/6));
+            region_jcts_this=unique(idx(dist<s/8));
             if detectjcts
             region_jcts{id}=[];
             for k=1:length(region_jcts_this)

@@ -2,7 +2,7 @@ function [xcoords,ycoords]=nodesmax(im,threshold,s)
 
 %     [ycoords,xcoords]=f_dynadetection(handles.var.img,threshold);
    
-    padDim = 3*round(threshold);
+    padDim = max([3*round(threshold),s+2]);
     imgPadded = padarray(im,[padDim,padDim],'replicate');
     if threshold==0
         pstruct.x=length(imgPadded(:,1))/2;

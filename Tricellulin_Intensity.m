@@ -22,7 +22,7 @@ function varargout = Tricellulin_Intensity(varargin)
 
 % Edit the above text to modify the response to help Tricellulin_Intensity
 
-% Last Modified by GUIDE v2.5 09-Oct-2018 15:40:01
+% Last Modified by GUIDE v2.5 14-Nov-2018 12:15:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -102,67 +102,74 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-switch eventdata.Character
-    case 'd'
-        if handles.allowdelete
-        deletejunctions_Callback(hObject, eventdata, handles)
-        end
-    case 'a'
-        addjunctions_Callback(hObject, eventdata, handles)
-    case 'q'
-        addaux_Callback(hObject,eventdata,handles)
-    case 'n'
-        newcell_Callback(hObject,eventdata,handles)
-    case 'p'
-        polygons_Callback(hObject,eventdata,handles)
-    case 'x'
-        newcellrect_Callback(hObject,eventdata,handles)
-    case 'u'
-        handles=automatic_cell(handles);
-        guidata(hObject,handles);
-    case 'c'
-        handles=changecellrow(hObject,eventdata,handles);
-        guidata(hObject,handles);
-    case 'k'
-        editpgon_Callback(hObject,eventdata,handles);
-    case '`'
-        loadsave(hObject,eventdata,handles);
-    case 'i'
-        handles.cellrowcurrent=handles.cellrowcurrent+1;
-        s=handles.cellrowcurrent;
-        set(handles.woundrow,'String',num2str(s));
-        guidata(hObject,handles);
-    case 'm'
-        handles=changejunction(handles);
-        guidata(hObject,handles);
-    case 'o'
-        handles.cellrowcurrent=handles.cellrowcurrent-1;
-        s=handles.cellrowcurrent;
-        set(handles.woundrow,'String',num2str(s));
-        guidata(hObject,handles);
-    case 'z'
-        uitoggletool1_ClickedCallback(hObject, eventdata, handles);
-    case 't'
-        uitoggletool3_ClickedCallback(hObject, eventdata, handles);
-    case 'y'
-        handles=yap(handles);
-        handles.cellrow(handles.yaploc<1.1)=1;
-        handles.cellrow(isnan(handles.yaploc))=1;
-        handles.cellrow(handles.yaploc>=1.1)=2;
-        guidata(hObject,handles);
-    case '1'
-        tricnormalize(handles.cell_in,handles);
-    case '9'
-        handles = deletecell(hObject,eventdata,handles);
-        %guidata(hObject,handles);
-    case '6'
-        set(handles.info,'String','Start Update Junctions');
-        handles=updatejunctions(handles);
-        set(handles.info,'String','Update Junctions finished');
-        guidata(hObject,handles);
-        
-        
-end
+% switch eventdata.Character
+%     case 'd'
+%         if handles.allowdelete
+%         deletejunctions_Callback(hObject, eventdata, handles)
+%         end
+%     case 'a'
+%         addjunctions_Callback(hObject, eventdata, handles)
+%     case 'q'
+%         addaux_Callback(hObject,eventdata,handles)
+%     case 'n'
+%         newcell_Callback(hObject,eventdata,handles)
+%     case 'p'
+%         polygons_Callback(hObject,eventdata,handles)
+%     case 'x'
+%         newcellrect_Callback(hObject,eventdata,handles)
+%     case 'u'
+%         handles=automatic_cell(handles);
+%         guidata(hObject,handles);
+%     case 'c'
+%         handles=changecellrow(hObject,eventdata,handles);
+%         guidata(hObject,handles);
+%     case 'k'
+%         editpgon_Callback(hObject,eventdata,handles);
+%     case '`'
+%         loadsave(hObject,eventdata,handles);
+%     case 'i'
+%         handles.cellrowcurrent=handles.cellrowcurrent+1;
+%         s=handles.cellrowcurrent;
+%         set(handles.woundrow,'String',num2str(s));
+%         guidata(hObject,handles);
+%     case 'm'
+%         handles=changejunction(handles);
+%         guidata(hObject,handles);
+%     case 'o'
+%         handles.cellrowcurrent=handles.cellrowcurrent-1;
+%         s=handles.cellrowcurrent;
+%         set(handles.woundrow,'String',num2str(s));
+%         guidata(hObject,handles);
+%     case 'z'
+%         uitoggletool1_ClickedCallback(hObject, eventdata, handles);
+%     case 't'
+%         uitoggletool3_ClickedCallback(hObject, eventdata, handles);
+%     case 'y'
+%         handles=yap(handles);
+%         handles.cellrow(handles.yaploc<1.1)=1;
+%         handles.cellrow(isnan(handles.yaploc))=1;
+%         handles.cellrow(handles.yaploc>=1.1)=2;
+%         guidata(hObject,handles);
+%     case '1'
+%         tricnormalize(handles.cell_in,handles);
+%     case '2'
+%         plotprops(handles,2);
+%     case '3'
+%         plotprops(handles,3);
+%     case '9'
+%         handles = deletecell(hObject,eventdata,handles);
+%         %guidata(hObject,handles);
+%     case '6'
+%         set(handles.info,'String','Start Update Junctions');
+%         handles=updatejunctions(handles);
+%         set(handles.info,'String','Update Junctions finished');
+%         guidata(hObject,handles);
+%     case 'w'
+%         handles=changetruejct(handles);
+%         guidata(hObject,handles);
+%         
+%         
+% end
 
 % --- Executes on button press in selectimage.
 function selectimage_Callback(hObject, eventdata, handles)
@@ -279,7 +286,7 @@ handles.angles{f}=handles.angles{f}(truejct_c);
 % handles.angles_range(f)=range(handles.angles{f})*(180/pi);
 % handles.cell_area(f)=area(handles.pgons{f});
 % handles.cell_perimeter(f)=perimeter(handles.pgons{f});
-handles.cellrow(f)=handles.cellrowcurrent;
+%handles.cellrow(f)=handles.cellrowcurrent;
 hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
 axes(handles.axes2);
 hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
@@ -305,14 +312,16 @@ end
 
 end
 handles.cells=handles.cells(~deletecells);
+
 handles.cell_in=handles.cell_in(~deletecells);
 handles.pgons=handles.pgons(~deletecells);
 handles.angles=handles.angles(~deletecells);
 handles.cellrow=handles.cellrow(~deletecells);
-celllist=get(handles.celllist,'String');
-celllist=celllist(~deletecells);
+for i=1:length(handles.pgons)
+    handles.cells{i}=sprintf('Cell %d',i');
+end
 set(handles.celllist,'Value',length(handles.cells));
-set(handles.celllist,'String',celllist);
+set(handles.celllist,'String',handles.cells);
 
 polygons_Callback(hObject,eventdata,handles);
 guidata(hObject,handles);
@@ -356,6 +365,7 @@ axes(handles.axes1);
 h=impoly;
 Pos=getPosition(h);
 in=find(inpolygon(handles.c,handles.r,Pos(:,1),Pos(:,2)));
+handles.cellrow(f)=handles.cellrowcurrent;
 handles=createcell(handles,in,f);
 delete(h);
 guidata(hObject,handles);
@@ -368,7 +378,7 @@ function handles=automatic_cell(handles)
     
     set(handles.deletejunctions,'Enable','off');
     
-    [in,jct,handles.truejct]=celledges_tric(handles.imcat,[handles.c handles.r],handles.cellsize,false,h,handles.detectjcts,handles.truejct,handles.imtric);
+    [in,jct,handles.truejct]=celledges_tric(handles.imcat,[handles.c handles.r],handles.cellsize,true,h,handles.detectjcts,handles.truejct,handles.imtric);
     handles.c=jct(:,1);
     handles.r=jct(:,2);
     
@@ -388,6 +398,7 @@ function handles=automatic_cell(handles)
             handles.cells{f}=sprintf('Cell %d',f');
             set(handles.celllist,'String',handles.cells);
             set(handles.celllist,'Value',f);
+            handles.cellrow(f)=handles.cellrowcurrent;
             handles=createcell(handles,in{i},f);
         end
     end
@@ -416,6 +427,7 @@ axes(handles.axes1);
 h=imrect;
 Pos=getPosition(h);
 in=find(inpolygon(handles.c,handles.r,[Pos(1) Pos(1) Pos(1)+Pos(3) Pos(1)+Pos(3) Pos(1)],[Pos(2) Pos(2)+Pos(4) Pos(2)+Pos(4) Pos(2) Pos(2)]));
+handles.cellrow(f)=handles.cellrowcurrent;
 handles=createcell(handles,in,f);
 delete(h);
 guidata(hObject,handles);
@@ -487,15 +499,38 @@ for i=1:length(handles.pgons)
    handles=createcell(handles,handles.cell_in{i}',i);
 end
         
-        
 
+    function plotprops(handles,type)
+    l=length(handles.pgons);
+    cell_area=zeros(1,l);
+    cell_perimeter=zeros(1,l);
+    for i=1:l
+        cell_area(i)=area(handles.pgons{i});
+        cell_perimeter(i)=perimeter(handles.pgons{i});
+    end
+    cell_sf=cell_perimeter./(cell_area.^0.5);
+    scell=64/800;
+    sperim=64/3;
+    switch type
+        case 2
+            cell_area=cell_area*handles.umtopix^2;
+            cell_plot=round(scell*(cell_area-200)+1);
+        case 3
+            cell_plot=round(sperim*(cell_sf-3)+1);
+    end
+    cell_plot(cell_plot>64)=64;
+    cell_plot(cell_plot<1)=1;
+    colors=colormap('jet');
+    plotpgons(handles,cell_plot,colors);
 
 function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormalize(cell_jcts,handles)
+   smask=10;s=1;
    jctangles=cell(length(handles.c),1);
-   bwcat=imbinarize(handles.imcat,'adaptive');
+   bwcat=imbinarize(handles.imcat,'adaptive','Sensitivity',0.57);
+   bwcat=bwareaopen(bwcat,30);
    for i=1:length(cell_jcts)
         in{i}=cell_jcts{i}(handles.truejct(cell_jcts{i})==1);
-        smask=10;
+        
         nr=size(handles.imtric,1);nc=size(handles.imtric,2);
         jctmask=zeros(nr,nc);
         for j=1:length(in{i})
@@ -512,24 +547,25 @@ function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormal
         end
         %jctmask=jctmask(1:nr,1:size(nc);
         [cx,cy]=centroid(handles.pgons{i});
-        polyout = scale(handles.pgons{i},1.1,[cx cy]);
+        polyout = scale(handles.pgons{i},1.3,[cx cy]);
         [x,y]=boundary(polyout);
         BW=poly2mask(x,y,nr,nc);
         mask=~jctmask.*BW.*bwcat;
-        %mask=imerode(mask,strel('disk',1));
-        %tric_mask=uint16(~jctmask).*uint16(BW).*handles.imtric.*uint16(bwcat);
         tric_mask=uint16(mask).*handles.imtric;
         tric_avg=mean(mean(tric_mask(tric_mask~=0)));
-%         signal{i}=cell_tric{i}(1:length(angles{i}));
-%         signal{i}=signal{i}./tric_avg;
-        indices=sub2ind(size(handles.imtric),round(handles.r(in{i})),round(handles.c(in{i})));
-        signal{i}=double(handles.imtric(indices)).';
+        for j=1:length(in{i})
+            rr=round(handles.r(in{i}(j)));cc=round(handles.c(in{i}(j)));
+            signal{i}(j)=mean(mean(handles.imtric(rr-s:rr+s,cc-1:cc+s)));
+        end
+%         indices=sub2ind(size(handles.imtric),round(handles.r(in{i})),round(handles.c(in{i})));
+%         signal{i}=double(handles.imtric(indices)).';
         cell_tric_avg_abs(i)=mean(signal{i});
         cell_tric_avg_n(i)=cell_tric_avg_abs(i)/tric_avg;
 %        cell_tric_avg_n(i)=handles.cell_tric_avg(i)/tric_avg;
         
    end
-   cell_tric_plot=round(32*(cell_tric_avg_n-1)+2);
+   stric=64/1;
+   cell_tric_plot=round(stric*(cell_tric_avg_n-1)+1);
    cell_tric_plot(cell_tric_plot>64)=64;
    cell_tric_plot(cell_tric_plot<1)=1;
    colors=colormap('jet');
@@ -780,6 +816,31 @@ axes(handles.axes1);
  hold on; scatter(handles.c(~handles.truejct==1),handles.r(~handles.truejct==1),100,'.','g');
  end
  guidata(hObject,handles);
+ 
+ 
+ 
+    function handles=changetruejct(handles)
+        axes(handles.axes1);
+ %zoom off;zoom off;pan off;datacursormode off;
+ [x,y] = my_ginput;%('Color','r');
+ if ~isempty(x)
+    [IDX,~] = knnsearch([handles.c,handles.r],[x,y]);
+    changejct=false(size(handles.c));
+    changejct(IDX)=true;
+    handles.truejct(changejct)=~handles.truejct(changejct);
+    axes(handles.axes1);
+    cla(handles.axes1);
+    imshow(handles.imfuse);
+    hold on; scatter(handles.c(handles.truejct==1),handles.r(handles.truejct==1),200,'.','r');
+    hold on; scatter(handles.c(~handles.truejct==1),handles.r(~handles.truejct==1),200,'.','b');
+    axes(handles.axes2);
+    cla(handles.axes2);
+    imshow(imadjust(handles.imtric));
+    %imshowpair(handles.imcat,imadjust(handles.imtric));
+     hold on; scatter(handles.c(handles.truejct==1),handles.r(handles.truejct==1),100,'.','b');
+ hold on; scatter(handles.c(~handles.truejct==1),handles.r(~handles.truejct==1),100,'.','g');
+ end
+
 
     function handles = changejunction(handles)
        [x,y] = ginput(1);%('Color','r');
@@ -923,7 +984,7 @@ try
     load(fullfile(pathname,matname),'cellrow');
     handles.cellrow=cellrow;
 catch
-    handles.cellrow=ones(size(cell_njcts));
+    handles.cellrow=ones(size(cell_jcts));
 end
 handles.imname=strrep(imname,'cat_*','cat_');
 imname=[imname '.tif'];
@@ -932,13 +993,17 @@ set(handles.imagename,'String',imname);
 handles.angles=angles;
 handles.cellrowcurrent=1;
 %handles.angles_range=angles_range;
-handles.cells=cells;
+%handles.cells=cells;
 handles.pgons=pgons;
+handles.cells=cell(length(pgons),1);
+for i=1:length(pgons)
+    handles.cells{i}=sprintf('Cell %d',i');
+end
 %handles.cell_njcts=cell_njcts;
 handles.umtopix=umtopix;
-%handles.cell_area=[];
-%handles.cell_perimeter=[];
-%handles.angles_range=[];
+handles.cell_area=[];
+handles.cell_perimeter=[];
+handles.angles_range=[];
 %for i=1:length(cells)
 %handles.cell_area(i)=area(handles.pgons{i});
 %handles.cell_perimeter(i)=perimeter(handles.pgons{i});
@@ -1133,9 +1198,10 @@ function cellnr_Callback(hObject, eventdata, handles)
 % hObject    handle to cellnr (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 s=str2double(get(hObject,'String'));
 if ~isnan(s)
-handles.cellsize=round(length(handles.imcat(:,:,1))/s);
+    handles.cellsize=round(length(handles.imcat(:,:,1))/s);
 end
 guidata(hObject,handles);
 % Hints: get(hObject,'String') returns contents of cellnr as text
@@ -1275,3 +1341,81 @@ function disabledelete_Callback(hObject, eventdata, handles)
 handles.allowdelete=~get(hObject,'Value');
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of disabledelete
+
+
+% --- Executes on key press with focus on figure1 and none of its controls.
+function figure1_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+switch eventdata.Character
+    case 'd'
+        if handles.allowdelete
+        deletejunctions_Callback(hObject, eventdata, handles)
+        end
+    case 'a'
+        addjunctions_Callback(hObject, eventdata, handles)
+    case 'q'
+        addaux_Callback(hObject,eventdata,handles)
+    case 'n'
+        newcell_Callback(hObject,eventdata,handles)
+    case 'p'
+        polygons_Callback(hObject,eventdata,handles)
+    case 'x'
+        newcellrect_Callback(hObject,eventdata,handles)
+    case 'u'
+        handles=automatic_cell(handles);
+        guidata(hObject,handles);
+    case 'c'
+        handles=changecellrow(hObject,eventdata,handles);
+        guidata(hObject,handles);
+    case 'k'
+        editpgon_Callback(hObject,eventdata,handles);
+    case '`'
+        loadsave(hObject,eventdata,handles);
+    case 'i'
+        handles.cellrowcurrent=handles.cellrowcurrent+1;
+        s=handles.cellrowcurrent;
+        set(handles.woundrow,'String',num2str(s));
+        guidata(hObject,handles);
+    case 'm'
+        handles=changejunction(handles);
+        guidata(hObject,handles);
+    case 'o'
+        handles.cellrowcurrent=handles.cellrowcurrent-1;
+        s=handles.cellrowcurrent;
+        set(handles.woundrow,'String',num2str(s));
+        guidata(hObject,handles);
+    case 'z'
+        uitoggletool1_ClickedCallback(hObject, eventdata, handles);
+    case 't'
+        uitoggletool3_ClickedCallback(hObject, eventdata, handles);
+    case 'y'
+        handles=yap(handles);
+        handles.cellrow(handles.yaploc<1.1)=1;
+        handles.cellrow(isnan(handles.yaploc))=1;
+        handles.cellrow(handles.yaploc>=1.1)=2;
+        guidata(hObject,handles);
+    case '1'
+        tricnormalize(handles.cell_in,handles);
+    case '2'
+        plotprops(handles,2);
+    case '3'
+        plotprops(handles,3);
+    case '9'
+        handles = deletecell(hObject,eventdata,handles);
+        %guidata(hObject,handles);
+    case '6'
+        set(handles.info,'String','Start Update Junctions');
+        handles=updatejunctions(handles);
+        set(handles.info,'String','Update Junctions finished');
+        guidata(hObject,handles);
+    case 'w'
+        handles=changetruejct(handles);
+        guidata(hObject,handles);
+        
+        
+end
