@@ -96,6 +96,7 @@ function Tricellulin_Intensity_OutputFcn(hObject, eventdata, handles, varargin)
 
 % --- Executes on key press with focus on figure1 or any of its controls.
 function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
+   % figure1_KeyPressFcn(hObject,eventdata,handles);
 % hObject    handle to figure1 (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
 %	Key: name of the key that was pressed, in lower case
@@ -171,6 +172,32 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
 %         
 % end
 
+function handles=tfm(hObject,handles)
+load(fullfile(handles.pathname,strrep(handles.imname,'_cat_','_tfm_\all.mat')),'cellogram');
+Fcenter=zeros(size(cellogram.analysis.F));
+V=cellogram.analysis.V./0.2;
+for i=1:length(Fcenter);for j=1:3;Fcenter(i,j)=mean(V(cellogram.analysis.F(i,:)+1,j));end;end
+
+ind=Fcenter(:,3)>-0.1;
+Fnew=Fcenter(ind,:);
+Tnew=cellogram.analysis.traction_forces(ind,:);
+
+
+for i=1:length(handles.pgons)
+   TFin=isinterior(handles.pgons{i},Fnew(:,1),Fnew(:,2));
+   handles.tfmx(i)=mean(abs(Tnew(TFin,1)));
+   handles.tfmy(i)=mean(abs(Tnew(TFin,2)));
+end
+
+stfm=64/max(handles.tfmx);
+cell_plot=round(stfm*(handles.tfmx)+1);
+
+    cell_plot(cell_plot>64)=64;
+    cell_plot(cell_plot<1)=1;
+    colors=colormap('jet');
+    plotpgons(handles,cell_plot,colors);
+
+
 % --- Executes on button press in selectimage.
 function selectimage_Callback(hObject, eventdata, handles)
 % hObject    handle to selectimage (see GCBO)
@@ -223,8 +250,8 @@ end
 guidata(hObject,handles);
 
 function handles=createcell(handles,in,f)
-axes(handles.axes1);
-hold on; plot(handles.c(in),handles.r(in),'og');
+%axes(handles.axes1);
+%hold on; plot(handles.c(in),handles.r(in),'og');
 %handles.pgons{f}=alphaShape(handles.c(in),handles.r(in),'HoleThreshold',1000000);%,'Simplify',true);
 set(handles.celllist,'Enable','on');
 %in=[in(end); in; in(1)];
@@ -287,9 +314,9 @@ handles.angles{f}=handles.angles{f}(truejct_c);
 % handles.cell_area(f)=area(handles.pgons{f});
 % handles.cell_perimeter(f)=perimeter(handles.pgons{f});
 %handles.cellrow(f)=handles.cellrowcurrent;
-hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
-axes(handles.axes2);
-hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
+%hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
+%axes(handles.axes2);
+%hold on; plot(handles.pgons{f},'FaceColor',handles.colors(handles.cellrow(f),:),'FaceAlpha',0.3,'EdgeAlpha',0.5);
 %set(handles.info,'String',sprintf('Cell: %d, Tricellulin Intensity: %d, Avg all cells: %d', f,handles.cell_tric_avg(f),mean(handles.cell_tric_avg)));
 set(handles.polygons,'Enable','on');
 set(handles.clearjcts,'Enable','off');
@@ -371,13 +398,13 @@ delete(h);
 guidata(hObject,handles);
 
 
-function handles=automatic_cell(handles)
-    
+function handles=automatic_cell(handles,hObject)
+   
     axes(handles.axes1);
     h=imrect;
-    
+    %set(handles.figure1,'Visible','off');
     set(handles.deletejunctions,'Enable','off');
-    
+    %wb=waitbar(0,'automatic cell recognition');
     [in,jct,handles.truejct]=celledges_tric(handles.imcat,[handles.c handles.r],handles.cellsize,true,h,handles.detectjcts,handles.truejct,handles.imtric);
     handles.c=jct(:,1);
     handles.r=jct(:,2);
@@ -402,7 +429,10 @@ function handles=automatic_cell(handles)
             handles=createcell(handles,in{i},f);
         end
     end
+    %set(hObject,'Visible','on');
+    
     delete(h);
+   % delete(wb);
 
 
 % --- Executes on button press in newcell.
@@ -517,6 +547,16 @@ end
             cell_plot=round(scell*(cell_area-200)+1);
         case 3
             cell_plot=round(sperim*(cell_sf-3)+1);
+        case 4
+            maxx=max(handles.tfmx);
+            stfm=64/maxx;
+            cell_plot=round(stfm*(handles.tfmx)+1);
+            set(handles.info,'String',['Max TFMx = ' num2str(maxx)]);
+        case 5
+            maxy=max(handles.tfmy);
+            stfm=64/maxy;
+            cell_plot=round(stfm*(handles.tfmy)+1);
+            set(handles.info,'String',['Max TFMy = ' num2str(maxy)]);
     end
     cell_plot(cell_plot>64)=64;
     cell_plot(cell_plot<1)=1;
@@ -1367,7 +1407,8 @@ switch eventdata.Character
     case 'x'
         newcellrect_Callback(hObject,eventdata,handles)
     case 'u'
-        handles=automatic_cell(handles);
+        handles=automatic_cell(handles,hObject);
+        polygons_Callback(hObject,eventdata,handles);
         guidata(hObject,handles);
     case 'c'
         handles=changecellrow(hObject,eventdata,handles);
@@ -1405,6 +1446,10 @@ switch eventdata.Character
         plotprops(handles,2);
     case '3'
         plotprops(handles,3);
+    case '4'
+        plotprops(handles,4);
+    case '5'
+        plotprops(handles,5);
     case '9'
         handles = deletecell(hObject,eventdata,handles);
         %guidata(hObject,handles);
@@ -1415,6 +1460,10 @@ switch eventdata.Character
         guidata(hObject,handles);
     case 'w'
         handles=changetruejct(handles);
+        guidata(hObject,handles);
+        
+    case '.'
+        handles=tfm(hObject,handles);
         guidata(hObject,handles);
         
         

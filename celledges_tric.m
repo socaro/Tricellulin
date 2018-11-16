@@ -153,7 +153,11 @@ rn=[];
             cn=[cn; cj(i)];
             rn=[rn; rj(i)];
         else
-            [~,ind]=max(imnodes(sub2ind(size(imnodes),round(rr),round(cc))));
+            try
+                [~,ind]=max(imnodes(sub2ind(size(imnodes),floor(rr),floor(cc))));
+            catch
+                [~,ind]=max(imnodes(sub2ind(size(imnodes),ceil(rr),ceil(cc))));
+            end
             cn=[cn; cc(ind)+cj(i)-ss-1];
             rn=[rn; rr(ind)+rj(i)-ss-1];
         end
