@@ -68,7 +68,8 @@ set(handles.save,'Enable','off');
 set(handles.celllist,'Enable','off');
 set(handles.polygons,'Enable','off');
 set(handles.objective,'String',[{'40x Objective'};{'60x Objective'}]);
-handles.umtopix=0.325;
+set(handles.objective,'Value',2);
+handles.umtopix=0.2262;
 handles.s_tric=1;
 handles.addsigma=1.5;
 handles.cellsize=1024/11;
@@ -172,7 +173,56 @@ function figure1_WindowKeyPressFcn(hObject, eventdata, handles)
 %         
 % end
 
+
+function handles=tfm1(hObject,handles)
+name=strrep(handles.imname,'_cat_','_tfm');
+R=load([handles.pathname,'/',name,'_/ReconstructedData/ReactionForces/',name]);
+R=R.Results;
+F=R.T; %unit kPa
+Fcenter=zeros(size(F));
+V=R.P_Def(:,2:4);
+for i=1:length(Fcenter);for j=1:3;Fcenter(i,j)=mean(V(F(i,:),j))/handles.umtopix;end;end
+Tnew=R.Traction_triangle_Def*1000;%unit kPa
+Tmag=sqrt(Tnew(:,1).^2+Tnew(:,2).^2);
+
+heatmap(handles,Fcenter(:,1),Fcenter(:,2),Tmag,[0 6],0);
+P=[Fcenter(:,1)*handles.umtopix/10^6 Fcenter(:,2)*handles.umtopix/10^6 Tnew(:,1) Tnew(:,2)];
+dlmwrite(strcat(handles.pathname,'\',name,'\comsol.txt'),P,'delimiter','\t','newline','pc');
+
+for i=1:length(handles.pgons)
+   TFin=isinterior(handles.pgons{i},Fcenter(:,1),Fcenter(:,2));
+   handles.tfmx(i)=mean(abs(Tnew(TFin,1)));
+   handles.tfmy(i)=mean(abs(Tnew(TFin,2)));
+   handles.tfmm(i)=mean(abs(Tmag(TFin)));
+end
+maxx=max(handles.tfmx);
+stfm=64/maxx;
+cell_plot=round(stfm*(handles.tfmx)+1);
+
+    cell_plot(cell_plot>64)=64;
+    cell_plot(cell_plot<1)=1;
+    colors=colormap('jet');
+    plotpgons(handles,cell_plot,colors);
+    set(handles.info,'String',['Max TFMx = ' num2str(maxx)]);    
+
+    
+function handles=tfmComsol(hObject,handles)
+name=strrep(handles.imname,'_cat_','_tfm_');
+comsol=dlmread(strcat(handles.pathname,name,'\comsoloutput.txt'),'       ',10,1);
+Fcenter=zeros(size(cellogram.analysis.F));
+V=cellogram.analysis.V./0.2;
+for i=1:length(Fcenter);for j=1:3;Fcenter(i,j)=mean(V(cellogram.analysis.F(i,:)+1,j));end;end
+
+ind=Fcenter(:,3)>-0.1;
+Fnew=Fcenter(ind,:);
+Tnew=cellogram.analysis.traction_forces(ind,:);
+Tmag=sqrt(Tnew(:,1).^2+Tnew(:,2).^2);
+
+heatmap(handles,Fnew(:,1),Fnew(:,2),Tmag,[0 6],0);
+    
+
 function handles=tfm(hObject,handles)
+name=strrep(handles.imname,'_cat_','_tfm_');
 load(fullfile(handles.pathname,strrep(handles.imname,'_cat_','_tfm_\all.mat')),'cellogram');
 Fcenter=zeros(size(cellogram.analysis.F));
 V=cellogram.analysis.V./0.2;
@@ -181,21 +231,38 @@ for i=1:length(Fcenter);for j=1:3;Fcenter(i,j)=mean(V(cellogram.analysis.F(i,:)+
 ind=Fcenter(:,3)>-0.1;
 Fnew=Fcenter(ind,:);
 Tnew=cellogram.analysis.traction_forces(ind,:);
+Tmag=sqrt(Tnew(:,1).^2+Tnew(:,2).^2);
 
+heatmap(handles,Fnew(:,1),Fnew(:,2),Tmag,[0 6],0);
+P=[Fnew(:,1)*handles.umtopix/10^6 Fnew(:,2)*handles.umtopix/10^6 Tnew(:,1) Tnew(:,2)];
+dlmwrite(strcat(handles.pathname,'\',name,'\comsol.txt'),P,'delimiter','\t','newline','pc');
 
 for i=1:length(handles.pgons)
    TFin=isinterior(handles.pgons{i},Fnew(:,1),Fnew(:,2));
    handles.tfmx(i)=mean(abs(Tnew(TFin,1)));
    handles.tfmy(i)=mean(abs(Tnew(TFin,2)));
+   handles.tfmm(i)=mean(abs(Tmag(TFin)));
 end
-
-stfm=64/max(handles.tfmx);
+maxx=max(handles.tfmx);
+stfm=64/maxx;
 cell_plot=round(stfm*(handles.tfmx)+1);
 
     cell_plot(cell_plot>64)=64;
     cell_plot(cell_plot<1)=1;
     colors=colormap('jet');
     plotpgons(handles,cell_plot,colors);
+    set(handles.info,'String',['Max TFMx = ' num2str(maxx)]);
+   
+
+function heatmap(handles,x,y,T,scale,plotjcts)
+    [Xq,Yq]=meshgrid(1:length(handles.imtric(1,:)),1:length(handles.imtric(:,1)));
+    Vq = griddata(x,y,T,Xq,Yq,'natural');
+    figure;imagesc(Vq,scale);
+    colormap jet;
+    colorbar;
+    if plotjcts
+        hold on;scatter(handles.c(logical(handles.truejct)),handles.r(logical(handles.truejct)),'.w');
+    end
 
 
 % --- Executes on button press in selectimage.
@@ -498,12 +565,12 @@ function handles=updatejunctions(handles)
         
       % alternative: faster, but less accurate
         %tic;
-        %[cx,cy]=centroid(handles.pgons{i});
-        %polyout = scale(handles.pgons{i},1.1,[cx cy]);
-        %[TFin,TFon]=isinterior(polyout,handles.c,handles.r);
-        [TFin,TFon]=isinterior(handles.pgons{i},handles.c,handles.r);
-        a=1:length(TFon);
-        innew2=a(TFon);
+        [cx,cy]=centroid(handles.pgons{i});
+        polyout = scale(handles.pgons{i},1.1,[cx cy]);
+        TFin=isinterior(polyout,handles.c,handles.r);
+%         [TFin,TFon]=isinterior(handles.pgons{i},handles.c,handles.r);
+        a=1:length(TFin);
+        innew2=a(TFin);
         handles.cell_in{i}=innew2;
         %toc;
         
@@ -534,9 +601,12 @@ end
     l=length(handles.pgons);
     cell_area=zeros(1,l);
     cell_perimeter=zeros(1,l);
+    centerx=zeros(l,1);
+    centery=zeros(l,1);
     for i=1:l
         cell_area(i)=area(handles.pgons{i});
         cell_perimeter(i)=perimeter(handles.pgons{i});
+        [centerx(i,:),centery(i,:)]=centroid(handles.pgons{i});
     end
     cell_sf=cell_perimeter./(cell_area.^0.5);
     scell=64/800;
@@ -545,8 +615,10 @@ end
         case 2
             cell_area=cell_area*handles.umtopix^2;
             cell_plot=round(scell*(cell_area-200)+1);
+            heatmap(handles,centerx,centery,cell_area,[0 1000],0);
         case 3
             cell_plot=round(sperim*(cell_sf-3)+1);
+            heatmap(handles,centerx,centery,cell_sf,[3 6],0);
         case 4
             maxx=max(handles.tfmx);
             stfm=64/maxx;
@@ -557,13 +629,58 @@ end
             stfm=64/maxy;
             cell_plot=round(stfm*(handles.tfmy)+1);
             set(handles.info,'String',['Max TFMy = ' num2str(maxy)]);
+        case 6
+            maxm=max(handles.tfmm);
+            stfm=64/maxm;
+            cell_plot=round(stfm*(handles.tfmm)+1);
+            set(handles.info,'String',['Max TFM = ' num2str(maxm)]);
     end
     cell_plot(cell_plot>64)=64;
     cell_plot(cell_plot<1)=1;
     colors=colormap('jet');
     plotpgons(handles,cell_plot,colors);
 
-function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormalize(cell_jcts,handles)
+    
+function tricjctwise(handles)
+    x=handles.c(logical(handles.truejct));
+    y=handles.r(logical(handles.truejct));
+    tricjct=zeros(size(x));
+    nr=size(handles.imtric,1);nc=size(handles.imtric,2);
+    bwcat=imbinarize(handles.imcat,'adaptive','Sensitivity',0.57);
+    bwcat=bwareaopen(bwcat,30);
+    tris=10;
+    bis=30;
+    s=1;
+    for i=1:length(x)
+        trijctmask=zeros(nr,nc);
+        bijctmask=zeros(nr,nc);
+        row=round(y(i));col=round(x(i));
+        rowstart=row-tris; if rowstart<1;rowstart=1;end
+        rowend=row+tris; if rowend>nr;rowend=nr;end
+        colstart=col-tris; if colstart<1;colstart=1;end
+        colend=col+tris; if colend>nr;colend=nr;end
+        trijctmask(rowstart:rowend,colstart:colend)=1;
+        
+        rowstart=row-bis; if rowstart<1;rowstart=1;end
+        rowend=row+bis; if rowend>nr;rowend=nr;end
+        colstart=col-bis; if colstart<1;colstart=1;end
+        colend=col+bis; if colend>nr;colend=nr;end
+        bijctmask(rowstart:rowend,colstart:colend)=1;
+        mask=bijctmask.*~trijctmask.*bwcat;
+        mask=uint16(mask).*handles.imtric;
+        tric_avg=mean(mean(mask(mask~=0)));
+        tricjct(i)=mean(mean(handles.imtric(row-s:row+s,col-s:col+s)))/tric_avg;
+    end
+    
+    heatmap(handles,x,y,tricjct,[1 2],0);
+ 
+    
+     
+    
+        
+        
+    
+function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormalize(cell_jcts,handles,hObject)
    smask=10;s=1;
    jctangles=cell(length(handles.c),1);
    bwcat=imbinarize(handles.imcat,'adaptive','Sensitivity',0.57);
@@ -595,7 +712,7 @@ function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormal
         tric_avg=mean(mean(tric_mask(tric_mask~=0)));
         for j=1:length(in{i})
             rr=round(handles.r(in{i}(j)));cc=round(handles.c(in{i}(j)));
-            signal{i}(j)=mean(mean(handles.imtric(rr-s:rr+s,cc-1:cc+s)));
+            signal{i}(j)=mean(mean(handles.imtric(rr-s:rr+s,cc-s:cc+s)));
         end
 %         indices=sub2ind(size(handles.imtric),round(handles.r(in{i})),round(handles.c(in{i})));
 %         signal{i}=double(handles.imtric(indices)).';
@@ -604,12 +721,14 @@ function [cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormal
 %        cell_tric_avg_n(i)=handles.cell_tric_avg(i)/tric_avg;
         
    end
-   stric=64/1;
+   handles.cell_tric_avg_n=cell_tric_avg_n;
+   stric=64/0.5;
    cell_tric_plot=round(stric*(cell_tric_avg_n-1)+1);
    cell_tric_plot(cell_tric_plot>64)=64;
    cell_tric_plot(cell_tric_plot<1)=1;
    colors=colormap('jet');
    plotpgons(handles,cell_tric_plot,colors);
+   guidata(hObject,handles);
         
 
 % --- Executes on button press in save.
@@ -631,7 +750,7 @@ in=cell(size(cell_jcts));
 %tric_avg=mean(mean(handles.imtric));
 name=[handles.imname handles.nameaddon '.mat'];
 
-[cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormalize(cell_jcts,handles);
+[cell_tric_avg_n,cell_tric_avg_abs,jctangles,signal,handles]=tricnormalize(cell_jcts,handles,hObject);
 
 %cell_tric_avg_abs=handles.cell_tric_avg;
 
@@ -990,7 +1109,7 @@ switch obj
     case 1
         handles.umtopix=0.325;
     case 2
-        handles.umtopix=0.2167;     
+        handles.umtopix=0.2262;     
 end
 guidata(hObject,handles);
         
@@ -1441,7 +1560,7 @@ switch eventdata.Character
         handles.cellrow(handles.yaploc>=1.1)=2;
         guidata(hObject,handles);
     case '1'
-        tricnormalize(handles.cell_in,handles);
+        tricnormalize(handles.cell_in,handles,hObject);
     case '2'
         plotprops(handles,2);
     case '3'
@@ -1450,10 +1569,12 @@ switch eventdata.Character
         plotprops(handles,4);
     case '5'
         plotprops(handles,5);
+    case '6'
+        plotprops(handles,6);
     case '9'
         handles = deletecell(hObject,eventdata,handles);
         %guidata(hObject,handles);
-    case '6'
+    case '8'
         set(handles.info,'String','Start Update Junctions');
         handles=updatejunctions(handles);
         set(handles.info,'String','Update Junctions finished');
@@ -1465,6 +1586,8 @@ switch eventdata.Character
     case '.'
         handles=tfm(hObject,handles);
         guidata(hObject,handles);
+    case '7'
+        tricjctwise(handles);
         
         
 end

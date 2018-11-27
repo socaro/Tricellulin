@@ -21,8 +21,8 @@ ljct=0;
 
 if edgedetect
     %ed=edge(im_jct,'canny',[],1.7);
-    ed=edge(im_jct,'log',[],1.5);
-    ed=bwareaopen(ed,5);
+    ed=edge(im_jct,'log',[],2);
+    ed=bwareaopen(ed,round(s/15));
     ed=imdilate(ed,strel('disk',1));
     ed=bwareaopen(ed,100,4);
     ed=imdilate(ed,strel('disk',2));
