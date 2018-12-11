@@ -146,7 +146,7 @@ ss=7;
 cn=[];
 rn=[];
     for i=1:length(cj)
-        if cj(i)>ss && cj(i)<w-ss && rj(i)>ss && cj(i)<ht-ss
+        if cj(i)>ss && cj(i)<w-ss && rj(i)>ss && rj(i)<ht-ss
         imnodes=imtric(rj(i)-ss:rj(i)+ss,cj(i)-ss:cj(i)+ss);
         [cc, rr]=nodesmax(imnodes,2,2);
         if isempty(cc)

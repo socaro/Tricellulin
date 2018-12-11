@@ -187,7 +187,7 @@ Tmag=sqrt(Tnew(:,1).^2+Tnew(:,2).^2);
 
 heatmap(handles,Fcenter(:,1),Fcenter(:,2),Tmag,[0 6],0);
 P=[Fcenter(:,1)*handles.umtopix/10^6 Fcenter(:,2)*handles.umtopix/10^6 Tnew(:,1) Tnew(:,2)];
-dlmwrite(strcat(handles.pathname,'\',name,'\comsol.txt'),P,'delimiter','\t','newline','pc');
+dlmwrite(strcat(handles.pathname,name,'_\comsol.txt'),P,'delimiter','\t','newline','pc');
 
 for i=1:length(handles.pgons)
    TFin=isinterior(handles.pgons{i},Fcenter(:,1),Fcenter(:,2));
@@ -208,17 +208,18 @@ cell_plot=round(stfm*(handles.tfmx)+1);
     
 function handles=tfmComsol(hObject,handles)
 name=strrep(handles.imname,'_cat_','_tfm_');
-comsol=dlmread(strcat(handles.pathname,name,'\comsoloutput.txt'),'       ',10,1);
-Fcenter=zeros(size(cellogram.analysis.F));
-V=cellogram.analysis.V./0.2;
-for i=1:length(Fcenter);for j=1:3;Fcenter(i,j)=mean(V(cellogram.analysis.F(i,:)+1,j));end;end
-
-ind=Fcenter(:,3)>-0.1;
-Fnew=Fcenter(ind,:);
-Tnew=cellogram.analysis.traction_forces(ind,:);
-Tmag=sqrt(Tnew(:,1).^2+Tnew(:,2).^2);
-
-heatmap(handles,Fnew(:,1),Fnew(:,2),Tmag,[0 6],0);
+comsol=load(strcat(handles.pathname,name,'\comsoloutput.txt'));%,'       ',10,1);
+[xq,yq,zq]=meshgrid(1:length(handles.imtric(:,1)),1:length(handles.imtric(1,:)),0:2.5:5);
+x=comsol(:,1)/handles.umtopix;y=comsol(:,2)/handles.umtopix;z=comsol(:,3);mises=comsol(:,4);
+% ind=find(z==0);
+% x=x(ind);y=y(ind);mises=mises(ind);
+% [xq,yq]=meshgrid(1:length(handles.imtric(:,1)),1:length(handles.imtric(1,:)));
+% misesq=griddata(x,y,mises,xq,yq);
+misesq=griddata(x,y,z,mises,xq,yq,zq);
+misesq_proj=mean(misesq(:,:,1:2),3);
+figure;imagesc(misesq_proj,[0 4000]);colormap jet; colorbar;
+handles.comsol=misesq_proj;
+guidata(hObject,handles);
     
 
 function handles=tfm(hObject,handles)
@@ -257,6 +258,25 @@ cell_plot=round(stfm*(handles.tfmx)+1);
 function heatmap(handles,x,y,T,scale,plotjcts)
     [Xq,Yq]=meshgrid(1:length(handles.imtric(1,:)),1:length(handles.imtric(:,1)));
     Vq = griddata(x,y,T,Xq,Yq,'natural');
+    
+%     ind=Vq>prctile(Vq,70);
+%     indneg=logical((Vq<prctile(Vq,30)));%.*(Vq>0));
+%     indneg=imerode(indneg,strel('disk',20));
+%     ind=bwareafilt(ind,2);
+%     indneg=bwareafilt(indneg,2);
+%     indneg=imdilate(indneg,strel('disk',40));
+%     ind=imdilate(ind,strel('disk',20));
+%     stresshightric=handles.comsol.*ind;
+%     stresslowtric=handles.comsol.*indneg;
+%     figure;imagesc(stresshightric,[0 4000]);colorbar;colormap jet;
+%     figure;imagesc(stresslowtric, [0 4000]);colorbar;colormap jet;
+%     meanhightric=mean(mean(stresshightric(stresshightric~=0)));
+%     meanlowtric=mean(mean(stresslowtric(stresslowtric~=0)));
+
+% name=strrep(handles.imname,'_cat_','_stress.tif');
+% imwrite(uint16(handles.comsol),[handles.pathname,'/', strrep(handles.imname,'_cat_','_tfm_/'),name]);
+% name=strrep(handles.imname,'_cat_','_tricellulin.tif');
+% imwrite(uint16(Vq.*215/10),[handles.pathname,'/', strrep(handles.imname,'_cat_','_tfm_/'),name]);    
     figure;imagesc(Vq,scale);
     colormap jet;
     colorbar;
@@ -1588,6 +1608,8 @@ switch eventdata.Character
         guidata(hObject,handles);
     case '7'
         tricjctwise(handles);
+    case 'v'
+        tfmComsol(hObject,handles);
         
         
 end
